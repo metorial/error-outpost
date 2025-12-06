@@ -1,3 +1,5 @@
+#![allow(clippy::collapsible_if)]
+
 use axum::{
   body::Bytes,
   extract::{Path, Query, State},
@@ -339,10 +341,10 @@ fn process_envelope(mut envelope: Envelope, state: &AppState) -> Envelope {
   if let Some(obj) = envelope.header.as_object_mut() {
     obj.insert("tenant_id".to_string(), Value::String(state.tenant_id.clone()));
     
-    if let Some(trace) = obj.get_mut("trace")
-      && let Some(trace_obj) = trace.as_object_mut()
-    {
-      trace_obj.insert("tenant_id".to_string(), Value::String(state.tenant_id.clone()));
+    if let Some(trace) = obj.get_mut("trace") {
+      if let Some(trace_obj) = trace.as_object_mut() {
+        trace_obj.insert("tenant_id".to_string(), Value::String(state.tenant_id.clone()));
+      }
     }
   }
   
@@ -400,15 +402,15 @@ async fn store_endpoint(
   
   let mut request = state.client.post(&relay_url).json(&enriched_event);
 
-  if let Some(auth) = headers.get("x-sentry-auth")
-    && let Ok(auth_str) = auth.to_str()
-  {
-    request = request.header("X-Sentry-Auth", auth_str);
+  if let Some(auth) = headers.get("x-sentry-auth") {
+    if let Ok(auth_str) = auth.to_str() {
+      request = request.header("X-Sentry-Auth", auth_str);
+    }
   }
-  if let Some(ua) = headers.get("user-agent")
-    && let Ok(ua_str) = ua.to_str()
-  {
-    request = request.header("User-Agent", ua_str);
+  if let Some(ua) = headers.get("user-agent") {
+    if let Ok(ua_str) = ua.to_str() {
+      request = request.header("User-Agent", ua_str);
+    }
   }
   
   match request.timeout(std::time::Duration::from_secs(5)).send().await {
@@ -460,15 +462,15 @@ async fn envelope_endpoint(
     .header("Content-Type", "application/x-sentry-envelope")
     .body(serialized_envelope);
 
-  if let Some(auth) = headers.get("x-sentry-auth")
-    && let Ok(auth_str) = auth.to_str()
-  {
-    request = request.header("X-Sentry-Auth", auth_str);
+  if let Some(auth) = headers.get("x-sentry-auth") {
+    if let Ok(auth_str) = auth.to_str() {
+      request = request.header("X-Sentry-Auth", auth_str);
+    }
   }
-  if let Some(ua) = headers.get("user-agent")
-    && let Ok(ua_str) = ua.to_str()
-  {
-    request = request.header("User-Agent", ua_str);
+  if let Some(ua) = headers.get("user-agent") {
+    if let Ok(ua_str) = ua.to_str() {
+      request = request.header("User-Agent", ua_str);
+    }
   }
   
   match request.timeout(std::time::Duration::from_secs(5)).send().await {
